@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>朗讀小教室｜唸讀辨識練習</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap');
+
+  :root{
+    --paper:#FBF6EC;
+    --paper-line: rgba(58,49,40,0.07);
+    --paper-margin: rgba(193,84,58,0.18);
+    --ink:#3A3128;
+    --ink-soft:#7A6E60;
+    --card:#FFFEFB;
+    --correct:#2E7D4F;
+    --correct-bg:#CFEFB4;
+    --wrong:#B4452D;
+    --wrong-bg:#FBDFCB;
+    --accent:#2F6F6E;
+    --accent-dark:#1F5453;
+    --accent-soft:#E4F1F0;
+    --shadow: 0 8px 24px rgba(58,49,40,0.10);
+    --radius: 16px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 2.4em;
+    color: var(--ink);
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .wrap{
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 18px 60px;
+    position: relative;
+  }
+
+  .wrap::before{
+    content:"";
+    position:absolute;
+    top:0; bottom:0; left: 46px;
+    width:2px;
+    background: var(--paper-margin);
+    pointer-events:none;
+  }
+  @media (max-width: 560px){
+    .wrap::before{ left: 28px; }
+  }
+
+  header{
+    padding-left: 28px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 560px){ header{ padding-left: 14px; } }
+
+  header h1{
+    font-family: 'Baloo 2', -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    margin: 0 0 4px;
+    color: var(--accent-dark);
+    letter-spacing: 0.5px;
+  }
+  header p{
+    margin:0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .card{
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 20px 22px;
+    margin: 0 0 18px 28px;
+    border: 1px solid rgba(58,49,40,0.06);
+  }
+  @media (max-width: 560px){ .card{ margin-left: 14px; padding: 16px; } }
+
+  .card h2, .card h3{
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+    color: var(--accent-dark);
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+
+  textarea#articleInput{
+    width: 100%;
+    min-height: 130px;
+    resize: vertical;
+    border: 2px solid rgba(47,111,110,0.18);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    line-height: 1.9;
+    background: #fff;
+    color: var(--ink);
+    transition: border-color .15s ease;
+  }
+  textarea#articleInput:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .row{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .row label{ font-size: 0.9rem; color: var(--ink-soft); }
+  select#langSelect{
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 2px solid rgba(47,111,110,0.18);
+    background: #fff;
+    color: var(--ink);
+  }
+  select#langSelect:focus{ outline: none; border-color: var(--accent); }
+
+  .controls{
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items:center;
+  }
+
+  button{
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    transition: transform .08s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  button:active{ transform: scale(0.97); }
+  button:disabled{ opacity: 0.4; cursor: not-allowed; }
+  button:focus-visible{
+    outline: 3px solid var(--accent-dark);
+    outline-offset: 2px;
+  }
+
+  #startBtn{
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(47,111,110,0.35);
+  }
+  #startBtn.recording{
+    background: var(--wrong);
+    box-shadow: 0 4px 12px rgba(180,69,45,0.35);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce){
+    #startBtn.recording{ animation: none; }
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow: 0 4px 12px rgba(180,69,45,0.35); }
+    50%{ box-shadow: 0 4px 22px rgba(180,69,45,0.6); }
+  }
+
+  #stopBtn{
+    background: #fff;
+    color: var(--ink);
+    border: 2px solid rgba(58,49,40,0.15);
+  }
+
+  #clearBtn{
+    background: transparent;
+    color: var(--ink-soft);
+    border: 2px dashed rgba(58,49,40,0.2);
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 10px 16px;
+  }
+
+  .status{
+    margin-top: 12px;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    min-height: 1.4em;
+  }
+  .status.error{ color: var(--wrong); font-weight: 600; }
+  .status.ok{ color: var(--correct); font-weight: 600; }
+
+  .article-display{
+    white-space: pre-wrap;
+    font-size: clamp(1.15rem, 4vw, 1.5rem);
+    line-height: 2.1;
+    word-break: break-word;
+  }
+
+  .live-transcript{
+    white-space: pre-wrap;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    min-height: 2.4em;
+    color: var(--ink-soft);
+  }
+  .live-final{ color: var(--ink); }
+  .live-interim{ color: var(--ink-soft); font-style: italic; }
+
+  .char.ignorable{ color: var(--ink-soft); }
+  .char.correct{
+    color: var(--correct);
+    background: linear-gradient(105deg, transparent 0%, var(--correct-bg) 12%, var(--correct-bg) 88%, transparent 100%);
+    padding: 1px 1px;
+    border-radius: 3px;
+  }
+  .char.wrong{
+    color: var(--wrong);
+    background: var(--wrong-bg);
+    border-radius: 3px;
+    padding: 1px 2px;
+    text-decoration: underline wavy var(--wrong);
+    text-decoration-thickness: 1.5px;
+  }
+
+  .score{
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    color: var(--accent-dark);
+  }
+  .score strong{
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.3rem;
+  }
+
+  .legend{
+    display:flex;
+    gap: 18px;
+    margin-top: 16px;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  .legend-item{ display:flex; align-items:center; gap:6px; }
+  .dot{ width: 12px; height: 12px; border-radius: 50%; display:inline-block; }
+  .dot.correct{ background: var(--correct); }
+  .dot.wrong{ background: var(--wrong); }
+
+  .spoken-text{
+    white-space: pre-wrap;
+    background: #fff;
+    border: 1px dashed rgba(58,49,40,0.2);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 1rem;
+    color: var(--ink-soft);
+  }
+
+  .hidden{ display:none !important; }
+
+  .warn-banner{
+    background: var(--wrong-bg);
+    color: var(--wrong);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 0 0 18px 28px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  @media (max-width: 560px){ .warn-banner{ margin-left: 14px; } }
+
+  footer{
+    padding-left: 28px;
+    margin-top: 24px;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+  @media (max-width: 560px){ footer{ padding-left: 14px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>📖 朗讀小教室</h1>
+    <p>貼上一篇短文，對著麥克風唸出來，看看哪些字唸對了、哪些字要再練習。</p>
+  </header>
+
+  <div id="unsupportedBanner" class="warn-banner hidden">
+    ⚠️ 這個瀏覽器不支援語音辨識功能，建議改用電腦版 Google Chrome 開啟此頁面。
+  </div>
+
+  <section class="card">
+    <h2>📝 第一步：貼上文章</h2>
+    <textarea id="articleInput" placeholder="請貼上想練習朗讀的短文……"></textarea>
+    <div class="row">
+      <label for="langSelect">辨識語言：</label>
+      <select id="langSelect">
+        <option value="zh-TW" selected>中文（繁體）</option>
+        <option value="zh-CN">中文（簡體）</option>
+        <option value="en-US">English</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="card" id="articleDisplayCard" style="display:none">
+    <h3>👀 唸讀時請看著這裡</h3>
+    <div id="articleDisplay" class="article-display"></div>
+  </section>
+
+  <section class="card">
+    <h2>🎤 第二步：開始朗讀</h2>
+    <div class="controls">
+      <button id="startBtn">🎤 開始朗讀</button>
+      <button id="stopBtn" disabled>⏹ 停止</button>
+      <button id="clearBtn">🔄 換一篇文章</button>
+    </div>
+    <div id="statusBox" class="status">請先貼上文章，再按「開始朗讀」。</div>
+  </section>
+
+  <section class="card hidden" id="liveCard">
+    <h3>⏳ 即時辨識內容</h3>
+    <div id="liveTranscript" class="live-transcript"></div>
+  </section>
+
+  <section class="card hidden" id="resultCard">
+    <h3>✅ 第三步：朗讀結果</h3>
+    <div class="score" id="scoreBox"></div>
+    <div id="resultDisplay" class="article-display"></div>
+    <div class="legend">
+      <span class="legend-item"><span class="dot correct"></span> 唸對的字</span>
+      <span class="legend-item"><span class="dot wrong"></span> 唸錯或漏唸的字</span>
+    </div>
+    <h3 style="margin-top:20px;">🗣 你實際唸出的內容</h3>
+    <div id="spokenFullText" class="spoken-text"></div>
+  </section>
+
+  <footer>
+    💡 小提醒：首次使用請允許麥克風權限；建議使用 Google Chrome 瀏覽器以獲得最佳語音辨識效果。標點符號與空白不列入比對。
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  var articleInput = $('articleInput');
+  var langSelect = $('langSelect');
+  var startBtn = $('startBtn');
+  var stopBtn = $('stopBtn');
+  var clearBtn = $('clearBtn');
+  var statusBox = $('statusBox');
+  var articleDisplayCard = $('articleDisplayCard');
+  var articleDisplay = $('articleDisplay');
+  var liveCard = $('liveCard');
+  var liveTranscript = $('liveTranscript');
+  var resultCard = $('resultCard');
+  var resultDisplay = $('resultDisplay');
+  var scoreBox = $('scoreBox');
+  var spokenFullText = $('spokenFullText');
+
+  var recognition = null;
+  var shouldRecord = false;
+  var finalTranscript = '';
+  var interimTranscript = '';
+  var articleSnapshot = '';
+
+  var IGNORABLE_REGEX = /[\s，。！？；：、「」『』《》〈〉（）()【】\[\]〔〕"'“”‘’…―—\-–_,.!?;:~`@#$%^&*+=<>\/\\|{}·．‧]/u;
+
+  function isIgnorable(ch){
+    return IGNORABLE_REGEX.test(ch);
+  }
+
+  function escapeHtml(s){
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function setStatus(text, kind){
+    statusBox.textContent = text;
+    statusBox.className = 'status' + (kind ? (' ' + kind) : '');
+  }
+
+  function buildMatchable(text){
+    var chars = Array.from(text);
+    var matchable = [];
+    for (var i = 0; i < chars.length; i++){
+      var ch = chars[i];
+      if (!isIgnorable(ch)){
+        matchable.push({ char: ch.toLowerCase(), idx: i });
+      }
+    }
+    return { chars: chars, matchable: matchable };
+  }
+
+  // Classic LCS DP + backtrack, returns boolean array over `a` marking matched positions
+  function computeLCSMatch(a, b){
+    var n = a.length, m = b.length;
+    if (n === 0 || m === 0) return new Array(n).fill(false);
+
+    var dp = new Array(n + 1);
+    for (var i = 0; i <= n; i++){ dp[i] = new Uint16Array(m + 1); }
+
+    for (i = 1; i <= n; i++){
+      for (var j = 1; j <= m; j++){
+        if (a[i - 1] === b[j - 1]){
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = dp[i - 1][j] >= dp[i][j - 1] ? dp[i - 1][j] : dp[i][j - 1];
+        }
+      }
+    }
+
+    var matched = new Array(n).fill(false);
+    i = n; var j2 = m;
+    while (i > 0 && j2 > 0){
+      if (a[i - 1] === b[j2 - 1]){
+        matched[i - 1] = true;
+        i--; j2--;
+      } else if (dp[i - 1][j2] >= dp[i][j2 - 1]){
+        i--;
+      } else {
+        j2--;
+      }
+    }
+    return matched;
+  }
+
+  function renderPlainArticle(text){
+    articleDisplay.textContent = text;
+  }
+
+  function renderLive(){
+    var html = '';
+    if (finalTranscript){
+      html += '<span class="live-final">' + escapeHtml(finalTranscript) + '</span>';
+    }
+    if (interimTranscript){
+      html += '<span class="live-interim">' + escapeHtml(interimTranscript) + '</span>';
+    }
+    liveTranscript.innerHTML = html || '<span class="live-interim">（等待語音輸入……）</span>';
+  }
+
+  function compareAndRender(){
+    var artBuild = buildMatchable(articleSnapshot);
+    var spokenBuild = buildMatchable(finalTranscript);
+
+    var aArr = artBuild.matchable.map(function(x){ return x.char; });
+    var bArr = spokenBuild.matchable.map(function(x){ return x.char; });
+
+    var matchedFlags = computeLCSMatch(aArr, bArr);
+
+    var correctSet = {};
+    for (var k = 0; k < artBuild.matchable.length; k++){
+      if (matchedFlags[k]){
+        correctSet[artBuild.matchable[k].idx] = true;
+      }
+    }
+
+    var html = '';
+    for (var idx = 0; idx < artBuild.chars.length; idx++){
+      var ch = artBuild.chars[idx];
+      var display = escapeHtml(ch);
+      if (isIgnorable(ch)){
+        html += '<span class="char ignorable">' + display + '</span>';
+      } else if (correctSet[idx]){
+        html += '<span class="char correct">' + display + '</span>';
+      } else {
+        html += '<span class="char wrong">' + display + '</span>';
+      }
+    }
+    resultDisplay.innerHTML = html;
+
+    var total = artBuild.matchable.length;
+    var correctCount = Object.keys(correctSet).length;
+    var percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+    scoreBox.innerHTML = '正確率：<strong>' + percent + '%</strong>　（唸對 ' + correctCount + ' / ' + total + ' 字）';
+
+    spokenFullText.textContent = finalTranscript.trim() ? finalTranscript : '（沒有偵測到語音內容，請確認麥克風權限後再試一次）';
+
+    resultCard.classList.remove('hidden');
+  }
+
+  function setupRecognition(){
+    if (!SpeechRecognitionImpl) return null;
+    var r = new SpeechRecognitionImpl();
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = langSelect.value;
+
+    r.onresult = function(event){
+      var newFinal = '';
+      var newInterim = '';
+      for (var i = event.resultIndex; i < event.results.length; i++){
+        var res = event.results[i];
+        if (res.isFinal){
+          newFinal += res[0].transcript;
+        } else {
+          newInterim += res[0].transcript;
+        }
+      }
+      if (newFinal){ finalTranscript += newFinal; }
+      interimTranscript = newInterim;
+      renderLive();
+    };
+
+    r.onerror = function(event){
+      var msg = '發生錯誤：' + event.error;
+      if (event.error === 'not-allowed' || event.error === 'permission-denied'){
+        msg = '⚠️ 請允許瀏覽器使用麥克風權限後再試一次。';
+      } else if (event.error === 'no-speech'){
+        msg = '沒有偵測到聲音，請靠近麥克風再試一次。';
+      } else if (event.error === 'audio-capture'){
+        msg = '⚠️ 找不到可用的麥克風裝置。';
+      } else if (event.error === 'network'){
+        msg = '⚠️ 網路連線異常，語音辨識暫時無法使用。';
+      }
+      setStatus(msg, 'error');
+    };
+
+    r.onend = function(){
+      if (shouldRecord){
+        // Browser auto-ended (e.g. silence timeout) but user hasn't pressed stop yet — keep listening.
+        try { r.start(); } catch (e) { /* ignore double-start errors */ }
+      } else {
+        startBtn.classList.remove('recording');
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        articleInput.disabled = false;
+        langSelect.disabled = false;
+        setStatus('辨識完成，正在比對結果……', 'ok');
+        compareAndRender();
+        setStatus('比對完成！你可以再按一次「開始朗讀」重新挑戰這篇文章。', 'ok');
+      }
+    };
+
+    return r;
+  }
+
+  function startReading(){
+    var text = articleInput.value.trim();
+    if (!text){
+      setStatus('⚠️ 請先在上面貼上想練習的文章內容。', 'error');
+      return;
+    }
+    if (!SpeechRecognitionImpl){
+      setStatus('⚠️ 這個瀏覽器不支援語音辨識，請改用 Chrome 瀏覽器。', 'error');
+      return;
+    }
+
+    articleSnapshot = text;
+    renderPlainArticle(articleSnapshot);
+    articleDisplayCard.style.display = 'block';
+
+    finalTranscript = '';
+    interimTranscript = '';
+    resultCard.classList.add('hidden');
+    liveCard.classList.remove('hidden');
+    renderLive();
+
+    recognition = setupRecognition();
+    recognition.lang = langSelect.value;
+    shouldRecord = true;
+
+    try {
+      recognition.start();
+      startBtn.classList.add('recording');
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      articleInput.disabled = true;
+      langSelect.disabled = true;
+      setStatus('🎙 錄音中……請看著文章，慢慢唸出來。', 'ok');
+    } catch (e){
+      setStatus('⚠️ 無法啟動麥克風：' + e.message, 'error');
+      shouldRecord = false;
+    }
+  }
+
+  function stopReading(){
+    shouldRecord = false;
+    stopBtn.disabled = true;
+    setStatus('處理中，請稍候……');
+    if (recognition){
+      try { recognition.stop(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  function clearAll(){
+    shouldRecord = false;
+    if (recognition){ try { recognition.stop(); } catch (e) {} }
+    finalTranscript = '';
+    interimTranscript = '';
+    articleSnapshot = '';
+    articleInput.value = '';
+    articleInput.disabled = false;
+    langSelect.disabled = false;
+    articleDisplayCard.style.display = 'none';
+    liveCard.classList.add('hidden');
+    resultCard.classList.add('hidden');
+    startBtn.classList.remove('recording');
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    setStatus('已清除，請貼上新的文章再開始。');
+  }
+
+  startBtn.addEventListener('click', startReading);
+  stopBtn.addEventListener('click', stopReading);
+  clearBtn.addEventListener('click', clearAll);
+
+  if (!SpeechRecognitionImpl){
+    $('unsupportedBanner').classList.remove('hidden');
+    setStatus('⚠️ 此瀏覽器不支援語音辨識，建議改用 Google Chrome。', 'error');
+    startBtn.disabled = true;
+  }
+})();
+</script>
+</body>
+</html>
